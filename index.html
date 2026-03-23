@@ -276,6 +276,83 @@ const allQuestions = [
 let fcIndex=0, fcFlipped=false, fcKnown=new Set(), fcUnknown=new Set(), fcReview=false, fcQueue=[];
 let concLevel=1, concSelBlank=null, concAns1={}, concAns2={};
 let quizMode=null, quizQ=[], quizIdx=0, quizScore=0, quizStreak=0, quizAnswered=false;
+let quizPersonality='serious';
+
+const personalities = {
+  serious: {
+    label: 'Serious', icon: '📖',
+    correct: [
+      "Correct. That is exactly right.",
+      "Well done. That answer is accurate.",
+      "Correct. Keep going.",
+      "That's right. Good work.",
+      "Yes. You've got that one.",
+    ],
+    wrong: [
+      "That is incorrect. Review the explanation below.",
+      "Not quite. Read the explanation carefully.",
+      "Wrong answer. Make sure you understand why.",
+      "Incorrect. The right answer is shown above.",
+      "No. Study the explanation before moving on.",
+    ],
+    results: {
+      perfect: "Perfect score. You are prepared for the test.",
+      great:   "Strong performance. Review any weak areas before the test.",
+      ok:      "Passing, but more study is recommended before the test.",
+      low:     "More study is needed. Go back through the flashcards and try again.",
+    }
+  },
+  funny: {
+    label: 'Funny', icon: '😄',
+    correct: [
+      "CORRECT! Luther is literally doing a happy dance right now.",
+      "Yes! Moses would high-five you but he's got his hands full with those tablets.",
+      "Nailed it! God approves. (Probably.)",
+      "Right answer! Your confirmation mentor is somewhere smiling without knowing why.",
+      "Boom! You just out-catechized 90% of medieval Europe.",
+      "Correct! That's one commandment down, nine to go. You're basically Moses at this point.",
+    ],
+    wrong: [
+      "Bzzzzt! Wrong! Even the golden calf knew that one.",
+      "Noooope. That answer is committing the 9th Commandment against correctness.",
+      "Incorrect! Your Sunday School teacher just winced and they don't know why.",
+      "Ooof. That's a miss. Good thing God is into forgiveness.",
+      "Wrong! Don't worry — it's not a sin to get it wrong. Probably.",
+      "Nope! Martin Luther would like a word.",
+    ],
+    results: {
+      perfect: "PERFECT SCORE. You are ready for confirmation AND possibly a theology PhD.",
+      great:   "Really solid! A few more study sessions and you'll be unstoppable. Luther would be proud-ish.",
+      ok:      "Not bad! Keep at it — you're closer than you think.",
+      low:     "Well... God loves you unconditionally, which is good because the test score needs work. Back to the flashcards!",
+    }
+  },
+  sarcastic: {
+    label: 'Sarcastic', icon: '😏',
+    correct: [
+      "Oh wow, you got one right. Call the newspapers.",
+      "Correct. Try not to look too surprised.",
+      "Yes, that's right. Don't let it go to your head.",
+      "Congratulations. You answered a question correctly. Want a medal?",
+      "Right. I mean, it was kind of obvious, but sure.",
+      "Yeah yeah, correct. I'm sure that was very hard for you.",
+    ],
+    wrong: [
+      "Nope. But hey, at least you answered with confidence.",
+      "Wrong. Shockingly. I'm sure you'll get the next one... maybe.",
+      "That is incorrect. Truly a bold choice.",
+      "Oh interesting — that was not the right answer. Wild.",
+      "Not even close. But points for creativity, I guess.",
+      "Wrong. I'm not mad, just deeply, deeply disappointed.",
+    ],
+    results: {
+      perfect: "Perfect score. I'm honestly a little surprised. Don't tell anyone I said that.",
+      great:   "Pretty good. I mean, I've seen better, but I've definitely seen worse.",
+      ok:      "Passing. Technically. The bar was low and you cleared it. Mostly.",
+      low:     "Well. That happened. The good news is the only way to go is up. Probably.",
+    }
+  }
+};
 
 /* ── NAVIGATION ── */
 function gotoTab(id) {
@@ -472,7 +549,18 @@ function checkFITB() {
 
 /* ── QUIZ ── */
 function renderQuizMenu() {
+  const p = quizPersonality;
   document.getElementById('quiz-main').innerHTML = `
+    <div style="margin-bottom:1.25rem;">
+      <div style="font-size:13px;font-weight:500;color:var(--text2);margin-bottom:8px;">Feedback personality:</div>
+      <div style="display:flex;gap:8px;">
+        ${Object.entries(personalities).map(([key,val])=>`
+          <button onclick="setPersonality('${key}')" style="flex:1;padding:10px 8px;border-radius:var(--radius-lg);border:${p===key?'2px solid var(--blue)':'0.5px solid var(--border2)'};background:${p===key?'var(--blue-light)':'var(--bg2)'};cursor:pointer;font-size:13px;color:${p===key?'var(--blue)':'var(--text)'};font-weight:${p===key?'500':'400'};">
+            <div style="font-size:20px;margin-bottom:4px;">${val.icon}</div>
+            <div>${val.label}</div>
+          </button>`).join('')}
+      </div>
+    </div>
     <div style="margin-bottom:1rem;font-size:14px;color:var(--text2);">Pick a mode:</div>
     <div class="mode-grid">
       <div class="mode-card" onclick="startQuiz('all')"><div class="mode-icon">🎯</div><div class="mode-label">Full Quiz</div><div class="mode-desc">All ${allQuestions.length} questions shuffled</div></div>
@@ -481,6 +569,7 @@ function renderQuizMenu() {
       <div class="mode-card" onclick="startQuiz('tf')"><div class="mode-icon">⚡</div><div class="mode-label">True / False</div><div class="mode-desc">Fast-fire true/false round</div></div>
     </div>`;
 }
+function setPersonality(p) { quizPersonality=p; renderQuizMenu(); }
 function startQuiz(mode) {
   quizMode=mode; quizAnswered=false; quizIdx=0; quizScore=0; quizStreak=0;
   let pool=allQuestions;
@@ -535,13 +624,20 @@ function checkTF(chosen) {
   showQFB(correct,q.explain);
 }
 function showQFB(correct,explain) {
-  document.getElementById('q-fb').innerHTML=`<div class="feedback ${correct?'correct':'wrong'}" style="margin-top:12px;">${correct?'✓ Correct! ':'✗ Not quite. '}${explain||''}</div>
+  const p = personalities[quizPersonality];
+  const pool = correct ? p.correct : p.wrong;
+  const quip = pool[Math.floor(Math.random()*pool.length)];
+  document.getElementById('q-fb').innerHTML=`<div class="feedback ${correct?'correct':'wrong'}" style="margin-top:12px;">
+    <div style="font-weight:500;margin-bottom:4px;">${quip}</div>
+    <div style="font-size:13px;opacity:0.85;">${explain||''}</div>
+  </div>
   <button class="btn primary" style="margin-top:10px;" onclick="quizNext()">${quizIdx+1<quizQ.length?'Next →':'See results →'}</button>`;
 }
 function quizNext(){quizIdx++;renderQuizQ();}
 function renderQuizResults(){
   const pct=Math.round((quizScore/quizQ.length)*100);
-  const msg=pct===100?"Perfect score! You're ready for confirmation!":pct>=80?"Great work! Almost there.":pct>=60?"Solid effort — keep practicing!":"Keep studying — you'll get it!";
+  const r = personalities[quizPersonality].results;
+  const msg = pct===100?r.perfect:pct>=80?r.great:pct>=60?r.ok:r.low;
   document.getElementById('quiz-main').innerHTML=`<div class="card" style="text-align:center;padding:2rem;">
     <div style="font-size:14px;color:var(--text2);">Final score</div>
     <div style="font-size:48px;font-weight:500;margin:8px 0;">${quizScore}/${quizQ.length}</div>
