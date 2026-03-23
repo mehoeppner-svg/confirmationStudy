@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Confirmation Quest — Ten Commandments</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --bg2: #f5f5f4;
+    --bg3: #eeece8;
+    --text: #1a1a1a;
+    --text2: #6b6b6b;
+    --text3: #999;
+    --border: rgba(0,0,0,0.12);
+    --border2: rgba(0,0,0,0.22);
+    --blue: #185FA5;
+    --blue-light: #E6F1FB;
+    --blue-mid: #378ADD;
+    --green: #3B6D11;
+    --green-light: #EAF3DE;
+    --green-text: #27500A;
+    --red: #A32D2D;
+    --red-light: #FCEBEB;
+    --red-text: #501313;
+    --amber-light: #FAEEDA;
+    --amber-text: #633806;
+    --radius: 8px;
+    --radius-lg: 12px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1c1c;
+      --bg2: #252525;
+      --bg3: #2e2e2e;
+      --text: #f0f0f0;
+      --text2: #aaa;
+      --text3: #777;
+      --border: rgba(255,255,255,0.1);
+      --border2: rgba(255,255,255,0.2);
+      --blue-light: #0C447C;
+      --green-light: #173404;
+      --green-text: #C0DD97;
+      --red-light: #501313;
+      --red-text: #F09595;
+      --amber-light: #412402;
+      --amber-text: #FAC775;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg3); color: var(--text); min-height: 100vh; }
+  .shell { max-width: 720px; margin: 0 auto; padding: 0 0 4rem; }
+
+  /* Top nav */
+  .topbar { background: var(--bg); border-bottom: 0.5px solid var(--border); padding: 0 1.5rem; position: sticky; top: 0; z-index: 10; }
+  .topbar-inner { display: flex; align-items: center; gap: 0; }
+  .app-title { font-size: 15px; font-weight: 500; color: var(--text); padding: 14px 0; margin-right: 1.5rem; white-space: nowrap; }
+  .main-tab { padding: 14px 16px; font-size: 14px; cursor: pointer; border: none; background: none; color: var(--text2); border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; }
+  .main-tab.active { color: var(--blue); border-bottom-color: var(--blue); font-weight: 500; }
+
+  /* Sections */
+  .section { padding: 1.5rem; display: none; }
+  .section.active { display: block; }
+
+  /* Cards */
+  .card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 1rem; }
+  .card-sm { padding: 1rem 1.25rem; }
+
+  /* Progress bar */
+  .prog-wrap { height: 4px; background: var(--border); border-radius: 2px; margin-bottom: 1.5rem; overflow: hidden; }
+  .prog-fill { height: 100%; background: var(--blue-mid); border-radius: 2px; transition: width .3s; }
+
+  /* Buttons */
+  button { font-family: inherit; cursor: pointer; }
+  .btn { background: var(--bg2); border: 0.5px solid var(--border2); border-radius: var(--radius); padding: 9px 18px; font-size: 14px; color: var(--text); transition: background .15s; }
+  .btn:hover { background: var(--bg); }
+  .btn.primary { background: var(--blue); border-color: var(--blue); color: #fff; }
+  .btn.primary:hover { background: #0C447C; }
+  .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 1rem; }
+  .btn-full { flex: 1; min-width: 120px; }
+
+  /* Badges */
+  .badge { display: inline-block; font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 500; margin-bottom: 8px; }
+  .badge-blue { background: var(--blue-light); color: var(--blue); }
+  .badge-green { background: var(--green-light); color: var(--green-text); }
+  .badge-amber { background: var(--amber-light); color: var(--amber-text); }
+  .badge-red { background: var(--red-light); color: var(--red-text); }
+
+  /* Stats row */
+  .stats-row { display: flex; gap: 10px; margin-bottom: 1rem; }
+  .stat-box { flex: 1; background: var(--bg2); border-radius: var(--radius); padding: 10px 12px; text-align: center; }
+  .stat-n { font-size: 22px; font-weight: 500; }
+  .stat-l { font-size: 12px; color: var(--text2); margin-top: 2px; }
+
+  /* Flashcard */
+  .fc-card { min-height: 200px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 10px; cursor: pointer; user-select: none; }
+  .fc-num { font-size: 52px; font-weight: 500; color: var(--blue-mid); }
+  .fc-prompt { font-size: 13px; color: var(--text3); }
+  .fc-theme { display: inline-block; font-size: 12px; padding: 3px 12px; border-radius: 20px; background: var(--blue-light); color: var(--blue); font-weight: 500; margin-bottom: 6px; }
+  .fc-text { font-size: 15px; font-weight: 500; line-height: 1.6; color: var(--text); text-align: left; }
+  .fc-sub { font-size: 13px; color: var(--text2); margin-top: 4px; text-align: left; }
+  .fc-hint { font-size: 13px; color: var(--text3); font-style: italic; margin-top: 6px; text-align: left; }
+  .known-row { display: flex; gap: 8px; margin-top: 10px; }
+  .known-btn { flex: 1; padding: 10px; border-radius: var(--radius); border: 0.5px solid var(--border2); background: var(--bg2); font-size: 14px; color: var(--text); cursor: pointer; }
+  .known-btn.yes { background: var(--green-light); border-color: var(--green); color: var(--green-text); }
+  .known-btn.no { background: var(--red-light); border-color: var(--red); color: var(--red-text); }
+
+  /* Mode select grid */
+  .mode-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 1.5rem; }
+  .mode-card { background: var(--bg); border: 0.5px solid var(--border2); border-radius: var(--radius-lg); padding: 1rem; cursor: pointer; text-align: left; transition: border-color .15s; }
+  .mode-card:hover { border-color: var(--blue-mid); }
+  .mode-card.selected { border: 2px solid var(--blue); }
+  .mode-icon { font-size: 22px; margin-bottom: 6px; }
+  .mode-label { font-size: 14px; font-weight: 500; color: var(--text); }
+  .mode-desc { font-size: 12px; color: var(--text2); margin-top: 2px; }
+
+  /* Quiz */
+  .q-meta { font-size: 12px; color: var(--text3); margin-bottom: 6px; }
+  .q-cat { display: inline-block; font-size: 11px; padding: 2px 10px; border-radius: 20px; background: var(--bg2); color: var(--text2); margin-bottom: 8px; }
+  .q-text { font-size: 16px; line-height: 1.6; color: var(--text); margin-bottom: 1.25rem; }
+  .choices { display: flex; flex-direction: column; gap: 8px; }
+  .choice { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 10px 14px; font-size: 14px; color: var(--text); text-align: left; cursor: pointer; transition: all .15s; }
+  .choice:hover:not(:disabled) { border-color: var(--border2); background: var(--bg); }
+  .choice.correct { background: var(--green-light); border-color: var(--green); color: var(--green-text); }
+  .choice.wrong { background: var(--red-light); border-color: var(--red); color: var(--red-text); }
+  .tf-row { display: flex; gap: 10px; }
+  .tf-btn { flex: 1; padding: 12px; border-radius: var(--radius); border: 0.5px solid var(--border2); background: var(--bg2); font-size: 15px; font-weight: 500; color: var(--text); cursor: pointer; }
+  .tf-btn.correct { background: var(--green-light); border-color: var(--green); color: var(--green-text); }
+  .tf-btn.wrong { background: var(--red-light); border-color: var(--red); color: var(--red-text); }
+  .feedback { margin-top: 12px; padding: 10px 14px; border-radius: var(--radius); font-size: 14px; line-height: 1.5; }
+  .feedback.correct { background: var(--green-light); color: var(--green-text); }
+  .feedback.wrong { background: var(--red-light); color: var(--red-text); }
+
+  /* Conclusion / FITB */
+  .conc-text { font-size: 15px; line-height: 2.4; color: var(--text); }
+  .blank { display: inline-block; border-bottom: 2px solid var(--blue-mid); min-width: 80px; text-align: center; color: var(--blue); font-weight: 500; cursor: pointer; padding: 0 4px; vertical-align: bottom; }
+  .blank.sel { outline: 2px solid var(--blue-mid); border-radius: 3px; }
+  .blank.ok { border-color: var(--green); color: var(--green-text); }
+  .blank.err { border-color: var(--red); color: var(--red-text); }
+  .word-bank { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 1rem; }
+  .chip { padding: 6px 14px; border-radius: 20px; background: var(--bg2); border: 0.5px solid var(--border2); cursor: pointer; font-size: 14px; color: var(--text); transition: all .15s; }
+  .chip:hover { border-color: var(--blue-mid); color: var(--blue); }
+  .chip.used { opacity: .35; pointer-events: none; }
+  .fitb-fb { margin-top: 1rem; padding: 10px 14px; border-radius: var(--radius); font-size: 14px; }
+  .fitb-fb.ok { background: var(--green-light); color: var(--green-text); }
+  .fitb-fb.warn { background: var(--amber-light); color: var(--amber-text); }
+  .fitb-fb.err { background: var(--red-light); color: var(--red-text); }
+  .level-btns { display: flex; gap: 8px; margin-bottom: 1rem; }
+  .type-input { width: 100%; padding: 10px 14px; border: 0.5px solid var(--border2); border-radius: var(--radius); font-size: 15px; color: var(--text); background: var(--bg2); margin-top: 1rem; display: none; }
+  .type-input:focus { outline: none; border-color: var(--blue-mid); }
+
+  /* Intro screen */
+  .intro { text-align: center; padding: 2.5rem 1.5rem; }
+  .intro h1 { font-size: 22px; font-weight: 500; margin-bottom: 8px; }
+  .intro p { font-size: 14px; color: var(--text2); margin-bottom: 1.5rem; line-height: 1.6; }
+  .steps { display: flex; gap: 10px; margin-bottom: 1.5rem; flex-wrap: wrap; justify-content: center; }
+  .step { flex: 1; min-width: 130px; background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1rem; text-align: center; }
+  .step-num { width: 28px; height: 28px; border-radius: 50%; background: var(--blue-light); color: var(--blue); font-size: 14px; font-weight: 500; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; }
+  .step-label { font-size: 13px; font-weight: 500; color: var(--text); }
+  .step-desc { font-size: 12px; color: var(--text2); margin-top: 3px; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="app-title">Confirmation Quest</div>
+      <button class="main-tab active" onclick="gotoTab('home')">Home</button>
+      <button class="main-tab" onclick="gotoTab('flashcards')">Flashcards</button>
+      <button class="main-tab" onclick="gotoTab('conclusion')">Conclusion</button>
+      <button class="main-tab" onclick="gotoTab('quiz')">Quiz</button>
+    </div>
+  </div>
+
+  <!-- HOME -->
+  <div class="section active" id="tab-home">
+    <div class="intro">
+      <h1>Ten Commandments — Study App</h1>
+      <p>Built for confirmation prep. Work through all three steps in order the first time,<br>then use Quiz to test yourself whenever you want.</p>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-label">Flashcards</div>
+          <div class="step-desc">Learn all 10 commandments, themes &amp; memory hints</div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-label">Conclusion</div>
+          <div class="step-desc">Master Luther's conclusion — 3 levels of difficulty</div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-label">Quiz</div>
+          <div class="step-desc">35-question game covering everything on the test</div>
+        </div>
+      </div>
+      <button class="btn primary" onclick="gotoTab('flashcards')">Start with Flashcards →</button>
+    </div>
+  </div>
+
+  <!-- FLASHCARDS -->
+  <div class="section" id="tab-flashcards">
+    <div id="fc-main"></div>
+  </div>
+
+  <!-- CONCLUSION -->
+  <div class="section" id="tab-conclusion">
+    <div id="conc-main"></div>
+  </div>
+
+  <!-- QUIZ -->
+  <div class="section" id="tab-quiz">
+    <div id="quiz-main"></div>
+  </div>
+</div>
+
+<script>
+/* ── DATA ── */
+const commandments = [
+  {num:1,text:"You shall have no other gods before me.",theme:"Priority",hint:"Keep God as number ONE.",extra:"When God is first in our lives, we trust him above all else; doing his will becomes our top priority."},
+  {num:2,text:"You shall not take the name of the Lord your God in vain; for the Lord will not hold guiltless those who take his name in vain.",theme:"Respect",hint:"There are TWO ways to use God's name: for good or for bad.",extra:"The two bolts of lightning remind us that God's name is powerful — we use it with respect."},
+  {num:3,text:"Remember the Sabbath day to keep it holy.",theme:"Sabbath (rest)",hint:"Worship the THREE-in-one God: Father, Son, and Holy Spirit.",extra:"Sabbath means to stop, to rest, to take a break. A good way to observe the Sabbath is by worshipping with the church."},
+  {num:4,text:"Honor your father and your mother, that your days may be long in the land which the Lord your God is giving you.",theme:"Authority",hint:"Imagine a family of FOUR: father, mother, son and daughter.",extra:"God calls us to honor our parents and others in authority over us."},
+  {num:5,text:"You shall not kill.",theme:"Protection",hint:"FIVE fingers say 'stop' — stay alive.",extra:"Jesus says killing includes harming people in any way: words, actions, threats. We are not to harm ourselves or others."},
+  {num:6,text:"You shall not commit adultery.",theme:"Fidelity",hint:"SIX is about faithful sex.",extra:"Fidelity is the string that allows us to hold on to the love of husband or wife. Marriage is meant to be a commitment for life."},
+  {num:7,text:"You shall not steal.",theme:"Responsibility",hint:"SEVEN is the key to the lock that keeps things from being stolen.",extra:"We take responsibility to see that no one steals the property of others — including giving proper credit for other people's ideas."},
+  {num:8,text:"You shall not bear false witness against your neighbor.",theme:"Integrity",hint:"EIGHT reminds us to 'talk straight.'",extra:"God does not want us to lie, gossip, or misrepresent the truth. This includes spreading rumors and lying under oath (perjury)."},
+  {num:9,text:"You shall not covet your neighbor's house.",theme:"Contentment",hint:"NINE helps us remember 'we'll do fine.'",extra:"If we are content, we will not covet our neighbor's house and possessions. Coveting often leads to envy, greed, and jealousy."},
+  {num:10,text:"You shall not covet your neighbor's wife, his workers, or his livestock, or anything that is your neighbor's.",theme:"Contentment (consequences)",hint:"9 = don't covet the house; 10 = don't covet anything INSIDE the house.",extra:"Coveting often leads to many other bad consequences that follow as a result."},
+];
+
+const blanks1 = ["jealous","iniquity","third","fourth","hate","steadfast","thousands","love","commandments"];
+const blanks2 = ["threatens","violate","fear","disobey","promises","keep","love","trust","gladly"];
+
+const allQuestions = [
+  {cat:"Ten Commandments",type:"mc",q:"Which commandment is: 'You shall have no other gods before me.'",answer:"1st",choices:["1st","2nd","3rd","4th"],correct:0,explain:"The 1st Commandment — Priority. Keep God as number ONE."},
+  {cat:"Ten Commandments",type:"mc",q:"What is the theme word for the 2nd Commandment (do not misuse God's name)?",answer:"Respect",choices:["Respect","Authority","Fidelity","Integrity"],correct:0,explain:"Respect — God's name is powerful; we use it with respect. There are TWO ways to use it: for good or for bad."},
+  {cat:"Ten Commandments",type:"mc",q:"What does 'Sabbath' mean?",answer:"To stop / to rest",choices:["To worship","To stop / to rest","To pray","To give"],correct:1,explain:"Sabbath = to stop, to rest, to take a break. Memory hint: the THREE-in-one God — Father, Son, Holy Spirit."},
+  {cat:"Ten Commandments",type:"mc",q:"Which commandment tells us to honor our father and mother?",answer:"4th",choices:["3rd","4th","5th","6th"],correct:1,explain:"The 4th Commandment — Authority. Memory hint: a family of FOUR."},
+  {cat:"Ten Commandments",type:"mc",q:"'You shall not kill.' What is the theme word for the 5th Commandment?",answer:"Protection",choices:["Integrity","Fidelity","Protection","Responsibility"],correct:2,explain:"PROTECTION — FIVE fingers say stop. 'Stay alive.'"},
+  {cat:"Ten Commandments",type:"mc",q:"What is the theme word for the 6th Commandment?",answer:"Fidelity",choices:["Contentment","Fidelity","Integrity","Responsibility"],correct:1,explain:"FIDELITY — SIX is about faithful sex. Fidelity means to be faithful and loyal."},
+  {cat:"Ten Commandments",type:"mc",q:"'You shall not steal.' What is the theme word for the 7th Commandment?",answer:"Responsibility",choices:["Fidelity","Authority","Responsibility","Protection"],correct:2,explain:"RESPONSIBILITY — SEVEN is the key to the lock that keeps things from being stolen."},
+  {cat:"Ten Commandments",type:"mc",q:"What is the theme word for the 8th Commandment (do not bear false witness)?",answer:"Integrity",choices:["Respect","Integrity","Contentment","Protection"],correct:1,explain:"INTEGRITY — EIGHT reminds us to 'talk straight.' No lying, gossip, or misrepresenting the truth."},
+  {cat:"Ten Commandments",type:"mc",q:"The 9th and 10th Commandments are both about what?",answer:"Coveting",choices:["Stealing","Lying","Coveting","Killing"],correct:2,explain:"Both deal with coveting — wanting what doesn't belong to you. The theme word is CONTENTMENT."},
+  {cat:"Ten Commandments",type:"mc",q:"What is the theme word for the 9th Commandment?",answer:"Contentment",choices:["Integrity","Contentment","Fidelity","Responsibility"],correct:1,explain:"CONTENTMENT — NINE, 'we'll do fine.' If we are content, we won't covet our neighbor's things."},
+  {cat:"Vocabulary",type:"mc",q:"What does 'Priority' mean?",answer:"What comes first in order and action",choices:["To be faithful","What comes first in order and action","To have power","To take a break"],correct:1,explain:"Priority = what comes first in order and action. God is our #1 priority."},
+  {cat:"Vocabulary",type:"mc",q:"What does 'Integrity' mean?",answer:"Honesty / trustworthiness in character",choices:["To be satisfied with what you have","To take proper care of something","Honesty / trustworthiness in character","To be faithful and loyal"],correct:2,explain:"Integrity = honesty/trustworthiness in character. Related to the 8th Commandment."},
+  {cat:"Vocabulary",type:"mc",q:"What does 'Contentment' mean?",answer:"To be satisfied with what you have",choices:["To be faithful","To have power","To be satisfied with what you have","The result of our actions"],correct:2,explain:"Contentment = to be satisfied with what you have. The cure for coveting."},
+  {cat:"Vocabulary",type:"mc",q:"What does 'Consequences' mean?",answer:"The result of our actions",choices:["To be kept from danger","The result of our actions","To stop and rest","To have power"],correct:1,explain:"Consequences = the result of our actions. Coveting often leads to bad consequences."},
+  {cat:"Vocabulary",type:"mc",q:"What does 'Authority' mean?",answer:"To have power; to be in charge",choices:["To be faithful","To recognize and honor","To have power; to be in charge","To take proper care of something"],correct:2,explain:"Authority = to have power; to be in charge. God uses authorities to keep order."},
+  {cat:"Vocabulary",type:"mc",q:"What does 'Fidelity' mean?",answer:"To be faithful and loyal",choices:["To be faithful and loyal","To have power","To take a break","The result of our actions"],correct:0,explain:"Fidelity = to be faithful and loyal. The theme of the 6th Commandment."},
+  {cat:"Vocabulary",type:"mc",q:"What does 'Responsibility' mean?",answer:"To take proper care of something",choices:["To have power","To be faithful","To take proper care of something","To stop and rest"],correct:2,explain:"Responsibility = to take proper care of something. Theme of the 7th Commandment."},
+  {cat:"Key Questions",type:"mc",q:"Why did God give us the law?",answer:"God's law protects us",choices:["To punish us","God's law protects us","To make life difficult","To test our faith"],correct:1,explain:"God's law protects us. It creates order and shows us our sins."},
+  {cat:"Key Questions",type:"mc",q:"What are the TWO basic functions of the law?",answer:"Creates order AND shows us our sins",choices:["Protects and punishes","Creates order AND shows us our sins","Forgives and restores","Rewards good, punishes evil"],correct:1,explain:"a) The law creates order; b) The law shows us our sins."},
+  {cat:"Key Questions",type:"mc",q:"Luther explains each commandment in two ways — what are they?",answer:"What we should NOT do, and what we SHOULD do",choices:["Fear and love","What we should NOT do, and what we SHOULD do","Old and New Testament","Sin and grace"],correct:1,explain:"Like a traffic signal — red light (stop/don't) and green light (go/do)."},
+  {cat:"Key Questions",type:"mc",q:"What is the difference between believing God exists vs. having faith in God?",answer:"Faith means you actually TRUST in God",choices:["There is no difference","Believing is stronger than faith","Faith means you actually TRUST in God","Believing means you pray more"],correct:2,explain:"Having faith in God means more than just admitting he exists — faith means you TRUST in God."},
+  {cat:"Key Questions",type:"mc",q:"How does God use a 'chain of command' to rule the world?",answer:"Through authorities like governments, police, parents",choices:["Only through the Bible","Through prayer alone","Through authorities like governments, police, parents","Through weather and nature"],correct:2,explain:"God uses various authorities (governments, police, judges, parents) to keep order and establish justice."},
+  {cat:"Key Questions",type:"mc",q:"According to Jesus, what does 'killing' include?",answer:"Harming people in any way — words, actions, threats",choices:["Only physical violence","Only threats","Harming people in any way — words, actions, threats","Only actions, not words"],correct:2,explain:"Killing includes harming people in any way — words, actions, threats. We must not harm ourselves or others."},
+  {cat:"Key Questions",type:"mc",q:"How is cheating on a test a type of stealing?",answer:"You take credit for something you didn't earn",choices:["It costs money","You take credit for something you didn't earn","It hurts the teacher","It breaks a rule"],correct:1,explain:"Cheating = taking credit that doesn't belong to you. That's stealing (7th Commandment)."},
+  {cat:"Key Questions",type:"mc",q:"What is temptation? Is it a sin to BE tempted?",answer:"Pressure to sin — being tempted is NOT itself a sin",choices:["Temptation is a sin itself","Pressure to sin — being tempted is NOT itself a sin","Temptation only comes from bad people","Christians are never tempted"],correct:1,explain:"Even Jesus was tempted — he did not sin. But giving in to temptation IS a sin in thought, word, or deed."},
+  {cat:"Key Questions",type:"mc",q:"What does 'sin' include?",answer:"Any thoughts, words, or actions disobedient to God",choices:["Only actions","Only bad words","Any thoughts, words, or actions disobedient to God","Only crimes"],correct:2,explain:"Sin includes any thoughts, words, or actions that are disobedient to God. God knows sin is harmful to us."},
+  {cat:"Key Questions",type:"mc",q:"What does it mean to 'covet'?",answer:"To want what does not belong to you",choices:["To pray for something","To want what does not belong to you","To steal something","To envy a friend out loud"],correct:1,explain:"Covet = wanting what we are not meant to have or don't have a right to. It leads to envy, greed, selfishness, and jealousy."},
+  {cat:"True or False",type:"tf",q:"Martin Luther originally wrote the Ten Commandments.",answer:false,explain:"FALSE — God gave the Ten Commandments to Moses on Mt. Sinai. Luther wrote the Small Catechism to explain them."},
+  {cat:"True or False",type:"tf",q:"God gave Moses the Ten Commandments on Mt. Sinai.",answer:true,explain:"TRUE — God gave Moses the Ten Commandments on Mt. Sinai."},
+  {cat:"True or False",type:"tf",q:"If someone tempts you to do something wrong, YOU have sinned.",answer:false,explain:"FALSE — Being tempted is not a sin. You only sin if you give in to temptation."},
+  {cat:"True or False",type:"tf",q:"When we break the Commandments, somebody is always hurt in some way.",answer:true,explain:"TRUE — Sin has consequences. Breaking commandments always affects someone."},
+  {cat:"True or False",type:"tf",q:"Idols are anything we trust in instead of God.",answer:true,explain:"TRUE — An idol is anything that takes God's place as our #1 trust and priority."},
+  {cat:"True or False",type:"tf",q:"Spreading rumors is a form of bearing false witness.",answer:true,explain:"TRUE — The 8th Commandment covers gossip and rumor-spreading."},
+  {cat:"True or False",type:"tf",q:"Using someone else's ideas as your own is a form of stealing.",answer:true,explain:"TRUE — Plagiarism is stealing. You're taking credit for something that doesn't belong to you."},
+  {cat:"True or False",type:"tf",q:"Wants and needs are the same thing.",answer:false,explain:"FALSE — Wants and needs are different. Coveting is about wanting things we don't need or have a right to."},
+  {cat:"True or False",type:"tf",q:"Having sex before marriage is adultery.",answer:true,explain:"TRUE — The 6th Commandment. Fidelity means reserving intimacy for marriage."},
+  {cat:"True or False",type:"tf",q:"Lying under oath (perjury) is against the law.",answer:true,explain:"TRUE — The 8th Commandment. Integrity is so important that lying under oath is even a civil crime."},
+];
+
+/* ── STATE ── */
+let fcIndex=0, fcFlipped=false, fcKnown=new Set(), fcUnknown=new Set(), fcReview=false, fcQueue=[];
+let concLevel=1, concSelBlank=null, concAns1={}, concAns2={};
+let quizMode=null, quizQ=[], quizIdx=0, quizScore=0, quizStreak=0, quizAnswered=false;
+
+/* ── NAVIGATION ── */
+function gotoTab(id) {
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.main-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  const tabs = ['home','flashcards','conclusion','quiz'];
+  document.querySelectorAll('.main-tab')[tabs.indexOf(id)].classList.add('active');
+  if (id==='flashcards') renderFC();
+  if (id==='conclusion') renderConc();
+  if (id==='quiz') renderQuizMenu();
+}
+
+/* ── FLASHCARDS ── */
+function renderFC() {
+  const el = document.getElementById('fc-main');
+  const queue = fcReview ? fcQueue : commandments;
+  if (!queue.length || fcIndex>=queue.length) { renderFCDone(); return; }
+  const c = queue[fcIndex];
+  const pct = Math.round((fcIndex/queue.length)*100);
+  let h = `<div class="prog-wrap"><div class="prog-fill" style="width:${pct}%"></div></div>`;
+  h += `<div style="font-size:12px;color:var(--text3);margin-bottom:10px;">${fcReview?'Review mode — ':''}${fcIndex+1} of ${queue.length}</div>`;
+  if (!fcFlipped) {
+    h += `<div class="card fc-card" onclick="fcFlip()">
+      <div class="fc-num">${c.num}</div>
+      <div style="font-size:15px;font-weight:500;">Commandment #${c.num}</div>
+      <div class="fc-prompt">Tap to reveal</div>
+    </div>`;
+  } else {
+    h += `<div class="card fc-card" style="cursor:default;text-align:left;align-items:flex-start;">
+      <div><span class="fc-theme">${c.theme}</span></div>
+      <div class="fc-text">"${c.text}"</div>
+      <div class="fc-sub">${c.extra}</div>
+      <div class="fc-hint">Memory hint: ${c.hint}</div>
+    </div>
+    <div style="font-size:13px;color:var(--text2);text-align:center;margin-bottom:8px;">Did you know this one?</div>
+    <div class="known-row">
+      <button class="known-btn yes" onclick="fcMark(true)">Yes, knew it</button>
+      <button class="known-btn no" onclick="fcMark(false)">Still learning</button>
+    </div>`;
+  }
+  el.innerHTML = h;
+}
+function fcFlip() { fcFlipped=true; renderFC(); }
+function fcMark(yes) {
+  const queue = fcReview ? fcQueue : commandments;
+  const c = queue[fcIndex];
+  if (yes) fcKnown.add(c.num); else fcUnknown.add(c.num);
+  fcIndex++; fcFlipped=false; renderFC();
+}
+function renderFCDone() {
+  const el = document.getElementById('fc-main');
+  let h = `<div class="card" style="text-align:center;padding:2rem;">
+    <div style="font-size:16px;font-weight:500;margin-bottom:8px;">All done!</div>
+    <div class="stats-row" style="margin:1rem 0;">
+      <div class="stat-box"><div class="stat-n" style="color:var(--green-text);">${fcKnown.size}</div><div class="stat-l">Knew it</div></div>
+      <div class="stat-box"><div class="stat-n" style="color:var(--red);">${fcUnknown.size}</div><div class="stat-l">Still learning</div></div>
+    </div>
+    <div class="btn-row">`;
+  if (fcUnknown.size>0) h += `<button class="btn btn-full" onclick="fcStartReview()">Review weak ones (${fcUnknown.size})</button>`;
+  h += `<button class="btn primary btn-full" onclick="fcReset()">Start over</button>
+    </div>
+    <div style="margin-top:1rem;"><button class="btn" onclick="gotoTab('conclusion')">Next: Luther's Conclusion →</button></div>
+  </div>`;
+  document.getElementById('fc-main').innerHTML = h;
+}
+function fcStartReview() {
+  fcReview=true; fcQueue=commandments.filter(c=>fcUnknown.has(c.num));
+  fcUnknown.clear(); fcIndex=0; fcFlipped=false; renderFC();
+}
+function fcReset() {
+  fcReview=false; fcQueue=[]; fcIndex=0; fcFlipped=false; fcKnown.clear(); fcUnknown.clear(); renderFC();
+}
+
+/* ── CONCLUSION ── */
+function renderConc() {
+  const el = document.getElementById('conc-main');
+  let h = `<div style="margin-bottom:1rem;">
+    <div style="font-size:18px;font-weight:500;margin-bottom:4px;">Luther's Conclusion</div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:1rem;">Three levels — work through them in order.</div>
+    <div class="level-btns">
+      ${[1,2,3].map(l=>`<button class="btn ${concLevel===l?'primary':''}" onclick="setLevel(${l})">Level ${l}</button>`).join('')}
+    </div>
+  </div>`;
+
+  if (concLevel===1) {
+    h += `<div class="card">
+      <span class="badge badge-green">Level 1 — Read it. Learn it.</span>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:12px;">Read both parts carefully. Key words are <strong>bolded</strong> — those are most likely to appear on the test.</div>
+      <div style="font-size:12px;font-weight:500;color:var(--text2);margin-bottom:6px;">THE DECLARATION (Exodus 20:5b-6)</div>
+      <div class="conc-text" style="background:var(--bg2);padding:12px;border-radius:var(--radius);margin-bottom:1.25rem;">
+        "I the Lord your God am a <strong>jealous</strong> God, visiting the <strong>iniquity</strong> of the fathers on the children to the <strong>third</strong> and the <strong>fourth</strong> generation of those who <strong>hate</strong> me, but showing <strong>steadfast</strong> love to <strong>thousands</strong> of those who <strong>love</strong> me and keep my <strong>commandments</strong>."
+      </div>
+      <div style="font-size:12px;font-weight:500;color:var(--text2);margin-bottom:6px;">WHAT DOES THIS MEAN? (Luther)</div>
+      <div class="conc-text" style="background:var(--bg2);padding:12px;border-radius:var(--radius);">
+        God <strong>threatens</strong> to punish all who <strong>violate</strong> these commandments. We should, therefore, <strong>fear</strong> his anger and in no way <strong>disobey</strong> them. But God <strong>promises</strong> grace and every blessing to all who <strong>keep</strong> these commandments. We should, therefore, <strong>love</strong> him, <strong>trust</strong> in him, and <strong>gladly</strong> keep his commandments.
+      </div>
+      <div style="margin-top:1rem;font-size:13px;color:var(--text2);">Read it out loud a few times, then try Level 2.</div>
+    </div>`;
+  } else if (concLevel===2) {
+    h += buildFITBWordBank();
+  } else {
+    h += buildFITBTyped();
+  }
+  el.innerHTML = h;
+}
+function setLevel(l) { concLevel=l; concAns1={}; concAns2={}; concSelBlank=null; renderConc(); }
+
+function blankHTML(key,sec,mode) {
+  const ans = sec===1?concAns1[key]:concAns2[key];
+  const fn = mode==='type'?'selectBlankType':'selectBlank';
+  let cls='blank'; if(ans){cls+=' ok';} 
+  return `<span class="${cls}" data-key="${key}" data-sec="${sec}" onclick="${fn}(this)">${ans||'____'}</span>`;
+}
+function buildFITBWordBank() {
+  const w1=shuffle([...blanks1]), w2=shuffle([...blanks2]);
+  const s1 = `"I the Lord your God am a ${blankHTML('jealous',1,'bank')} God, visiting the ${blankHTML('iniquity',1,'bank')} of the fathers on the children to the ${blankHTML('third',1,'bank')} and the ${blankHTML('fourth',1,'bank')} generation of those who ${blankHTML('hate',1,'bank')} me, but showing ${blankHTML('steadfast',1,'bank')} love to ${blankHTML('thousands',1,'bank')} of those who ${blankHTML('love',1,'bank')} me and keep my ${blankHTML('commandments',1,'bank')}."`;
+  const s2 = `God ${blankHTML('threatens',2,'bank')} to punish all who ${blankHTML('violate',2,'bank')} these commandments. We should, therefore, ${blankHTML('fear',2,'bank')} his anger and in no way ${blankHTML('disobey',2,'bank')} them. But God ${blankHTML('promises',2,'bank')} grace and every blessing to all who ${blankHTML('keep',2,'bank')} these commandments. We should, therefore, ${blankHTML('love',2,'bank')} him, ${blankHTML('trust',2,'bank')} in him, and ${blankHTML('gladly',2,'bank')} keep his commandments.`;
+  return `<div class="card">
+    <span class="badge badge-amber">Level 2 — Word bank</span>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:12px;">Tap a blank, then tap the matching word below.</div>
+    <div style="font-size:12px;font-weight:500;color:var(--text2);margin-bottom:6px;">The declaration</div>
+    <div class="conc-text" style="margin-bottom:1.25rem;" id="sec1">${s1}</div>
+    <div style="font-size:12px;font-weight:500;color:var(--text2);margin-bottom:6px;">What does this mean?</div>
+    <div class="conc-text" id="sec2">${s2}</div>
+    <div style="margin-top:1.25rem;font-size:13px;font-weight:500;color:var(--text2);margin-bottom:6px;">Word bank — Declaration:</div>
+    <div class="word-bank" id="bank1">${w1.map(w=>`<span class="chip" data-word="${w}" data-bank="1" onclick="pickWord(this)">${w}</span>`).join('')}</div>
+    <div style="margin-top:10px;font-size:13px;font-weight:500;color:var(--text2);margin-bottom:6px;">Word bank — Meaning:</div>
+    <div class="word-bank" id="bank2">${w2.map(w=>`<span class="chip" data-word="${w}" data-bank="2" onclick="pickWord(this)">${w}</span>`).join('')}</div>
+    <div id="fitb-fb"></div>
+    <div class="btn-row"><button class="btn" onclick="checkFITB()">Check answers</button><button class="btn" onclick="setLevel(2)">Reset</button></div>
+  </div>`;
+}
+function buildFITBTyped() {
+  const s1 = `"I the Lord your God am a ${blankHTML('jealous',1,'type')} God, visiting the ${blankHTML('iniquity',1,'type')} of the fathers on the children to the ${blankHTML('third',1,'type')} and the ${blankHTML('fourth',1,'type')} generation of those who ${blankHTML('hate',1,'type')} me, but showing ${blankHTML('steadfast',1,'type')} love to ${blankHTML('thousands',1,'type')} of those who ${blankHTML('love',1,'type')} me and keep my ${blankHTML('commandments',1,'type')}."`;
+  const s2 = `God ${blankHTML('threatens',2,'type')} to punish all who ${blankHTML('violate',2,'type')} these commandments. We should, therefore, ${blankHTML('fear',2,'type')} his anger and in no way ${blankHTML('disobey',2,'type')} them. But God ${blankHTML('promises',2,'type')} grace and every blessing to all who ${blankHTML('keep',2,'type')} these commandments. We should, therefore, ${blankHTML('love',2,'type')} him, ${blankHTML('trust',2,'type')} in him, and ${blankHTML('gladly',2,'type')} keep his commandments.`;
+  return `<div class="card">
+    <span class="badge badge-red">Level 3 — No word bank</span>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:12px;">Tap a blank and type the missing word. This is test conditions!</div>
+    <div style="font-size:12px;font-weight:500;color:var(--text2);margin-bottom:6px;">The declaration</div>
+    <div class="conc-text" style="margin-bottom:1.25rem;" id="sec1">${s1}</div>
+    <div style="font-size:12px;font-weight:500;color:var(--text2);margin-bottom:6px;">What does this mean?</div>
+    <div class="conc-text" id="sec2">${s2}</div>
+    <input class="type-input" id="type-inp" placeholder="Type the word, press Enter" onkeydown="if(event.key==='Enter')submitTyped()">
+    <div id="fitb-fb"></div>
+    <div class="btn-row"><button class="btn" onclick="checkFITB()">Check all</button><button class="btn" onclick="setLevel(3)">Reset</button></div>
+  </div>`;
+}
+function selectBlank(el) {
+  document.querySelectorAll('.blank').forEach(b=>b.classList.remove('sel'));
+  el.classList.add('sel'); concSelBlank=el;
+}
+function selectBlankType(el) {
+  document.querySelectorAll('.blank').forEach(b=>b.classList.remove('sel'));
+  el.classList.add('sel'); concSelBlank=el;
+  const inp=document.getElementById('type-inp');
+  inp.style.display='block'; inp.value=''; inp.focus();
+}
+function submitTyped() {
+  if (!concSelBlank) return;
+  const val=document.getElementById('type-inp').value.trim();
+  const key=concSelBlank.dataset.key, sec=parseInt(concSelBlank.dataset.sec);
+  if (sec===1) concAns1[key]=val.toLowerCase(); else concAns2[key]=val.toLowerCase();
+  concSelBlank.textContent=val||'____';
+  concSelBlank.classList.remove('sel'); concSelBlank=null;
+  document.getElementById('type-inp').style.display='none';
+}
+function pickWord(el) {
+  if (!concSelBlank) { return; }
+  const word=el.dataset.word, bank=el.dataset.bank, sec=concSelBlank.dataset.sec;
+  if (bank!==sec) { document.getElementById('fitb-fb').innerHTML=`<div class="fitb-fb err">That word belongs to the other section — pick the right word bank!</div>`; return; }
+  const key=concSelBlank.dataset.key;
+  if (sec==='1') concAns1[key]=word.toLowerCase(); else concAns2[key]=word.toLowerCase();
+  concSelBlank.textContent=word;
+  concSelBlank.classList.remove('sel'); concSelBlank=null;
+  el.classList.add('used');
+  document.getElementById('fitb-fb').innerHTML='';
+}
+function checkFITB() {
+  const allBlanks=[...blanks1.map(k=>({key:k,sec:1})),...blanks2.map(k=>({key:k,sec:2}))];
+  let correct=0;
+  document.querySelectorAll('.blank').forEach(el=>{
+    const key=el.dataset.key, sec=parseInt(el.dataset.sec);
+    const ans=sec===1?concAns1[key]:concAns2[key];
+    if (ans&&ans.toLowerCase()===key.toLowerCase()) { correct++; el.classList.add('ok'); el.classList.remove('err'); }
+    else if (ans) { el.classList.add('err'); el.classList.remove('ok'); }
+  });
+  const total=allBlanks.length, pct=Math.round(correct/total*100);
+  const fb=document.getElementById('fitb-fb');
+  if (correct===total) fb.innerHTML=`<div class="fitb-fb ok">Perfect! ${correct}/${total} — you're ready for the test!</div>`;
+  else if (pct>=70) fb.innerHTML=`<div class="fitb-fb warn">${correct}/${total} correct (${pct}%). Review the red blanks and try again.</div>`;
+  else fb.innerHTML=`<div class="fitb-fb err">${correct}/${total}. Go back to Level 1, read it again, then retry.</div>`;
+}
+
+/* ── QUIZ ── */
+function renderQuizMenu() {
+  document.getElementById('quiz-main').innerHTML = `
+    <div style="margin-bottom:1rem;font-size:14px;color:var(--text2);">Pick a mode:</div>
+    <div class="mode-grid">
+      <div class="mode-card" onclick="startQuiz('all')"><div class="mode-icon">🎯</div><div class="mode-label">Full Quiz</div><div class="mode-desc">All ${allQuestions.length} questions shuffled</div></div>
+      <div class="mode-card" onclick="startQuiz('commands')"><div class="mode-icon">📋</div><div class="mode-label">Commandments</div><div class="mode-desc">Which is which, themes & hints</div></div>
+      <div class="mode-card" onclick="startQuiz('vocab')"><div class="mode-icon">📖</div><div class="mode-label">Key Questions</div><div class="mode-desc">Vocab words & unit questions</div></div>
+      <div class="mode-card" onclick="startQuiz('tf')"><div class="mode-icon">⚡</div><div class="mode-label">True / False</div><div class="mode-desc">Fast-fire true/false round</div></div>
+    </div>`;
+}
+function startQuiz(mode) {
+  quizMode=mode; quizAnswered=false; quizIdx=0; quizScore=0; quizStreak=0;
+  let pool=allQuestions;
+  if (mode==='tf') pool=allQuestions.filter(q=>q.type==='tf');
+  else if (mode==='vocab') pool=allQuestions.filter(q=>q.cat==='Vocabulary'||q.cat==='Key Questions');
+  else if (mode==='commands') pool=allQuestions.filter(q=>q.cat==='Ten Commandments');
+  quizQ=shuffle(pool);
+  renderQuizQ();
+}
+function renderQuizQ() {
+  if (quizIdx>=quizQ.length) { renderQuizResults(); return; }
+  quizAnswered=false;
+  const q=quizQ[quizIdx];
+  const pct=Math.round((quizIdx/quizQ.length)*100);
+  let h=`<div class="prog-wrap"><div class="prog-fill" style="width:${pct}%"></div></div>`;
+  h+=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+    <div style="font-size:12px;color:var(--text3);">Question ${quizIdx+1} of ${quizQ.length}</div>
+    <div style="display:flex;gap:10px;font-size:13px;">
+      <span style="color:var(--text2);">Score <strong>${quizScore}</strong></span>
+      <span style="color:var(--text2);">Streak <strong>${quizStreak>1?quizStreak+'🔥':quizStreak}</strong></span>
+    </div>
+  </div>`;
+  h+=`<div class="card">`;
+  h+=`<span class="q-cat">${q.cat}</span>`;
+  h+=`<div class="q-text">${q.q}</div>`;
+  if (q.type==='tf') {
+    h+=`<div class="tf-row"><button class="tf-btn" id="tf-t" onclick="checkTF(true)">True</button><button class="tf-btn" id="tf-f" onclick="checkTF(false)">False</button></div>`;
+  } else {
+    const opts=shuffle(q.choices.map(c=>c));
+    h+=`<div class="choices">${opts.map(c=>`<button class="choice" onclick="checkMC(this,'${c.replace(/'/g,"\\'")}','${q.answer.replace(/'/g,"\\'")}','${(q.explain||'').replace(/'/g,"\\'")}')">${c}</button>`).join('')}</div>`;
+  }
+  h+=`<div id="q-fb"></div></div>`;
+  document.getElementById('quiz-main').innerHTML=h;
+}
+function checkMC(btn,chosen,answer,explain) {
+  if (quizAnswered) return; quizAnswered=true;
+  const correct=chosen===answer;
+  if (correct){quizScore++;quizStreak++;}else{quizStreak=0;}
+  btn.classList.add(correct?'correct':'wrong');
+  document.querySelectorAll('.choice').forEach(b=>{b.disabled=true;if(b.textContent===answer)b.classList.add('correct');});
+  showQFB(correct,explain);
+}
+function checkTF(chosen) {
+  if (quizAnswered) return; quizAnswered=true;
+  const q=quizQ[quizIdx];
+  const correct=chosen===q.answer;
+  if (correct){quizScore++;quizStreak++;}else{quizStreak=0;}
+  const t=document.getElementById('tf-t'), f=document.getElementById('tf-f');
+  t.disabled=true; f.disabled=true;
+  (q.answer?t:f).classList.add('correct');
+  if (!correct){(chosen?t:f).classList.add('wrong');}
+  showQFB(correct,q.explain);
+}
+function showQFB(correct,explain) {
+  document.getElementById('q-fb').innerHTML=`<div class="feedback ${correct?'correct':'wrong'}" style="margin-top:12px;">${correct?'✓ Correct! ':'✗ Not quite. '}${explain||''}</div>
+  <button class="btn primary" style="margin-top:10px;" onclick="quizNext()">${quizIdx+1<quizQ.length?'Next →':'See results →'}</button>`;
+}
+function quizNext(){quizIdx++;renderQuizQ();}
+function renderQuizResults(){
+  const pct=Math.round((quizScore/quizQ.length)*100);
+  const msg=pct===100?"Perfect score! You're ready for confirmation!":pct>=80?"Great work! Almost there.":pct>=60?"Solid effort — keep practicing!":"Keep studying — you'll get it!";
+  document.getElementById('quiz-main').innerHTML=`<div class="card" style="text-align:center;padding:2rem;">
+    <div style="font-size:14px;color:var(--text2);">Final score</div>
+    <div style="font-size:48px;font-weight:500;margin:8px 0;">${quizScore}/${quizQ.length}</div>
+    <div style="font-size:16px;color:var(--text2);margin-bottom:1.5rem;">${pct}% — ${msg}</div>
+    <div class="btn-row" style="justify-content:center;">
+      <button class="btn" onclick="renderQuizMenu()">Change mode</button>
+      <button class="btn primary" onclick="startQuiz(quizMode)">Try again</button>
+    </div>
+  </div>`;
+}
+
+/* ── UTILS ── */
+function shuffle(a){let b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
+</script>
+</body>
+</html>
