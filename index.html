@@ -525,9 +525,14 @@ function pickWord(el) {
   const word=el.dataset.word, bank=el.dataset.bank, sec=concSelBlank.dataset.sec;
   if (bank!==sec) { document.getElementById('fitb-fb').innerHTML=`<div class="fitb-fb err">That word belongs to the other section — pick the right word bank!</div>`; return; }
   const key=concSelBlank.dataset.key;
+  const prevWord = sec==='1' ? concAns1[key] : concAns2[key];
+  if (prevWord) {
+    const prevChip = document.querySelector(`#bank${sec} .chip[data-word="${prevWord}"]`);
+    if (prevChip) prevChip.classList.remove('used');
+  }
   if (sec==='1') concAns1[key]=word.toLowerCase(); else concAns2[key]=word.toLowerCase();
   concSelBlank.textContent=word;
-  concSelBlank.classList.remove('sel'); concSelBlank=null;
+  concSelBlank.classList.remove('sel','ok','err'); concSelBlank=null;
   el.classList.add('used');
   document.getElementById('fitb-fb').innerHTML='';
 }
